@@ -1,0 +1,122 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "total_epochs": 10,
+      "train_loss": 0.3194,
+      "train_acc": 0.8749,
+      "val_loss": 0.1843,
+      "val_acc": 0.9409,
+      "val_f1": 0.9047,
+      "is_best": true
+    },
+    {
+      "epoch": 2,
+      "total_epochs": 10,
+      "train_loss": 0.1145,
+      "train_acc": 0.9649,
+      "val_loss": 0.0959,
+      "val_acc": 0.9661,
+      "val_f1": 0.9455,
+      "is_best": true
+    },
+    {
+      "epoch": 3,
+      "total_epochs": 10,
+      "train_loss": 0.0546,
+      "train_acc": 0.984,
+      "val_loss": 0.0618,
+      "val_acc": 0.9842,
+      "val_f1": 0.9739,
+      "is_best": true
+    },
+    {
+      "epoch": 4,
+      "total_epochs": 10,
+      "train_loss": 0.0296,
+      "train_acc": 0.9933,
+      "val_loss": 0.0569,
+      "val_acc": 0.9842,
+      "val_f1": 0.974,
+      "is_best": true
+    },
+    {
+      "epoch": 5,
+      "total_epochs": 10,
+      "train_loss": 0.0191,
+      "train_acc": 0.9963,
+      "val_loss": 0.062,
+      "val_acc": 0.9842,
+      "val_f1": 0.974,
+      "is_best": true
+    },
+    {
+      "epoch": 6,
+      "total_epochs": 10,
+      "train_loss": 0.014,
+      "train_acc": 0.9968,
+      "val_loss": 0.0602,
+      "val_acc": 0.9858,
+      "val_f1": 0.9764,
+      "is_best": true
+    },
+    {
+      "epoch": 7,
+      "total_epochs": 10,
+      "train_loss": 0.011,
+      "train_acc": 0.998,
+      "val_loss": 0.0769,
+      "val_acc": 0.985,
+      "val_f1": 0.9751,
+      "is_best": false
+    },
+    {
+      "epoch": 8,
+      "total_epochs": 10,
+      "train_loss": 0.0085,
+      "train_acc": 0.9978,
+      "val_loss": 0.0916,
+      "val_acc": 0.9826,
+      "val_f1": 0.9716,
+      "is_best": false
+    },
+    {
+      "epoch": 9,
+      "total_epochs": 10,
+      "train_loss": 0.0077,
+      "train_acc": 0.9986,
+      "val_loss": 0.0864,
+      "val_acc": 0.9858,
+      "val_f1": 0.9763,
+      "is_best": false
+    },
+    {
+      "epoch": 10,
+      "total_epochs": 10,
+      "train_loss": 0.0033,
+      "train_acc": 0.9996,
+      "val_loss": 0.0987,
+      "val_acc": 0.9826,
+      "val_f1": 0.9716,
+      "is_best": false
+    }
+  ],
+  "final_metrics": {
+    "loss": 0.0987,
+    "accuracy": 0.9826,
+    "precision": 0.9716,
+    "recall": 0.9716,
+    "f1": 0.9716,
+    "confusion_matrix": [
+      [
+        1019,
+        11
+      ],
+      [
+        11,
+        227
+      ]
+    ]
+  },
+  "best_f1": 0.9764
+}
