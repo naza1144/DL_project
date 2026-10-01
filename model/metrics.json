@@ -3,120 +3,120 @@
     {
       "epoch": 1,
       "total_epochs": 10,
-      "train_loss": 0.3194,
-      "train_acc": 0.8749,
-      "val_loss": 0.1843,
-      "val_acc": 0.9409,
-      "val_f1": 0.9047,
+      "train_loss": 0.2418,
+      "train_acc": 0.8843,
+      "val_loss": 0.087,
+      "val_acc": 0.9792,
+      "val_f1": 0.974,
       "is_best": true
     },
     {
       "epoch": 2,
       "total_epochs": 10,
-      "train_loss": 0.1145,
-      "train_acc": 0.9649,
-      "val_loss": 0.0959,
-      "val_acc": 0.9661,
-      "val_f1": 0.9455,
+      "train_loss": 0.0425,
+      "train_acc": 0.99,
+      "val_loss": 0.045,
+      "val_acc": 0.9872,
+      "val_f1": 0.9842,
       "is_best": true
     },
     {
       "epoch": 3,
       "total_epochs": 10,
-      "train_loss": 0.0546,
-      "train_acc": 0.984,
-      "val_loss": 0.0618,
-      "val_acc": 0.9842,
-      "val_f1": 0.9739,
-      "is_best": true
+      "train_loss": 0.0261,
+      "train_acc": 0.995,
+      "val_loss": 0.0514,
+      "val_acc": 0.9839,
+      "val_f1": 0.9803,
+      "is_best": false
     },
     {
       "epoch": 4,
       "total_epochs": 10,
-      "train_loss": 0.0296,
-      "train_acc": 0.9933,
-      "val_loss": 0.0569,
-      "val_acc": 0.9842,
-      "val_f1": 0.974,
+      "train_loss": 0.0186,
+      "train_acc": 0.9952,
+      "val_loss": 0.0412,
+      "val_acc": 0.9896,
+      "val_f1": 0.9872,
       "is_best": true
     },
     {
       "epoch": 5,
       "total_epochs": 10,
-      "train_loss": 0.0191,
-      "train_acc": 0.9963,
-      "val_loss": 0.062,
-      "val_acc": 0.9842,
-      "val_f1": 0.974,
-      "is_best": true
+      "train_loss": 0.0111,
+      "train_acc": 0.9968,
+      "val_loss": 0.0581,
+      "val_acc": 0.9891,
+      "val_f1": 0.9865,
+      "is_best": false
     },
     {
       "epoch": 6,
       "total_epochs": 10,
-      "train_loss": 0.014,
-      "train_acc": 0.9968,
-      "val_loss": 0.0602,
-      "val_acc": 0.9858,
-      "val_f1": 0.9764,
+      "train_loss": 0.0065,
+      "train_acc": 0.9983,
+      "val_loss": 0.0593,
+      "val_acc": 0.9905,
+      "val_f1": 0.9883,
       "is_best": true
     },
     {
       "epoch": 7,
       "total_epochs": 10,
-      "train_loss": 0.011,
-      "train_acc": 0.998,
-      "val_loss": 0.0769,
-      "val_acc": 0.985,
-      "val_f1": 0.9751,
+      "train_loss": 0.0077,
+      "train_acc": 0.9985,
+      "val_loss": 0.0415,
+      "val_acc": 0.9896,
+      "val_f1": 0.9872,
       "is_best": false
     },
     {
       "epoch": 8,
       "total_epochs": 10,
-      "train_loss": 0.0085,
-      "train_acc": 0.9978,
-      "val_loss": 0.0916,
-      "val_acc": 0.9826,
-      "val_f1": 0.9716,
+      "train_loss": 0.0034,
+      "train_acc": 0.9993,
+      "val_loss": 0.0667,
+      "val_acc": 0.9887,
+      "val_f1": 0.9859,
       "is_best": false
     },
     {
       "epoch": 9,
       "total_epochs": 10,
-      "train_loss": 0.0077,
-      "train_acc": 0.9986,
-      "val_loss": 0.0864,
-      "val_acc": 0.9858,
-      "val_f1": 0.9763,
+      "train_loss": 0.0015,
+      "train_acc": 0.9995,
+      "val_loss": 0.0718,
+      "val_acc": 0.9901,
+      "val_f1": 0.9878,
       "is_best": false
     },
     {
       "epoch": 10,
       "total_epochs": 10,
-      "train_loss": 0.0033,
-      "train_acc": 0.9996,
-      "val_loss": 0.0987,
-      "val_acc": 0.9826,
-      "val_f1": 0.9716,
-      "is_best": false
+      "train_loss": 0.0003,
+      "train_acc": 1.0,
+      "val_loss": 0.0876,
+      "val_acc": 0.991,
+      "val_f1": 0.9889,
+      "is_best": true
     }
   ],
   "final_metrics": {
-    "loss": 0.0987,
-    "accuracy": 0.9826,
-    "precision": 0.9716,
-    "recall": 0.9716,
-    "f1": 0.9716,
+    "loss": 0.0876,
+    "accuracy": 0.991,
+    "precision": 0.9927,
+    "recall": 0.9852,
+    "f1": 0.9889,
     "confusion_matrix": [
       [
-        1019,
-        11
+        1510,
+        2
       ],
       [
-        11,
-        227
+        17,
+        586
       ]
     ]
   },
-  "best_f1": 0.9764
+  "best_f1": 0.9889
 }

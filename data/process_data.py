@@ -61,7 +61,8 @@ def generate_large_thai_dataset(target_scam: int = 2500, target_ham: int = 2500)
 
     while len(scam_set) < 750:
         pref, org, r, a, l = random.choice(util_prefix), random.choice(util_org), random.choice(util_reason), random.choice(util_amt), random.choice(util_l)
-        scam_set.add(f"{pref}{org}: {r} {a} บาท ตรวจสอบสิทธิ์และรับเงินคืนที่ {l}")
+        ref_no = random.randint(1000, 9999)
+        scam_set.add(f"{pref}{org}: {r} {a} บาท (รหัส {ref_no}) ตรวจสอบสิทธิ์และรับเงินคืนที่ {l}")
 
     # 3. พัสดุตกค้าง / สินค้าเสียหาย ขนส่ง (400 samples)
     couriers = ["ไปรษณีย์ไทย", "Flash Express", "Kerry Express", "J&T Express", "Shopee Express", "DHL Express"]
@@ -92,7 +93,8 @@ def generate_large_thai_dataset(target_scam: int = 2500, target_ham: int = 2500)
 
     while len(scam_set) < 1500:
         yr, a, m, l = random.choice(tax_years), random.choice(tax_amt), random.choice(tax_msgs), random.choice(tax_links)
-        scam_set.add(f"กรมสรรพากร: ประจำปี {yr} {m} จำนวน {a} บาท คลิก {l}")
+        case_id = f"TAX{random.randint(10000, 99999)}"
+        scam_set.add(f"กรมสรรพากร ({case_id}): ประจำปี {yr} {m} จำนวน {a} บาท คลิก {l}")
 
     # 5. ธนาคารปลอม / อายัดบัญชี (400 samples)
     banks = ["ธนาคารกสิกรไทย (KBank)", "SCB EASY", "ธนาคารกรุงเทพ (BBL)", "Krungthai NEXT", "ttb touch", "ธนาคารกรุงศรี", "ธนาคารออมสิน (GSB)"]
@@ -108,7 +110,9 @@ def generate_large_thai_dataset(target_scam: int = 2500, target_ham: int = 2500)
 
     while len(scam_set) < 1900:
         b, m, l = random.choice(banks), random.choice(bank_alerts), random.choice(bank_links)
-        scam_set.add(f"{b}: {m} {l}")
+        acc_tail = random.randint(1000, 9999)
+        ref_id = f"REF{random.randint(1000, 9999)}"
+        scam_set.add(f"{b}: บัญชี xxx-{acc_tail} {m} รหัส {ref_id} คลิก {l}")
 
     # 6. เว็บพนัน / เครดิตฟรี / คาสิโน (350 samples)
     casino_prov = ["สล็อต PG", "คาสิโนออนไลน์", "เว็บตรงอันดับ 1", "บาคาร่า SA", "JOKER123", "สล็อตแตกหนัก", "ค า ส ิ โ น"]
@@ -117,7 +121,8 @@ def generate_large_thai_dataset(target_scam: int = 2500, target_ham: int = 2500)
 
     while len(scam_set) < 2250:
         p, pr, l = random.choice(casino_prov), random.choice(casino_promo), random.choice(casino_links)
-        scam_set.add(f"{p} {pr} คลิก {l}")
+        code = f"VIP{random.randint(100, 999)}"
+        scam_set.add(f"{p} รหัส {code} {pr} คลิก {l}")
 
     # 7. งานออนไลน์ / กดยืนยันออเดอร์ (250 samples)
     job_brand = ["Shopee", "TikTok", "Lazada", "YouTube", "บริษัท พาร์ทไทม์ จำกัด"]
@@ -131,7 +136,8 @@ def generate_large_thai_dataset(target_scam: int = 2500, target_ham: int = 2500)
 
     while len(scam_set) < target_scam:
         jb, jd, l = random.choice(job_brand), random.choice(job_desc), random.choice(job_links)
-        scam_set.add(f"{jb}: {jd} {l}")
+        job_id = f"JOB-{random.randint(1000, 9999)}"
+        scam_set.add(f"{jb} (รหัสรับสมัคร {job_id}): {jd} {l}")
 
     # ==================== HAM GENERATION (2,500 samples) ====================
     # 1. รหัส OTP จริง (500 samples)
@@ -170,7 +176,8 @@ def generate_large_thai_dataset(target_scam: int = 2500, target_ham: int = 2500)
         tc = random.choice(telcos)
         bill = round(random.uniform(299.0, 1499.0), 2)
         day = random.randint(1, 28)
-        ham_set.add(f"{tc}: ยอดค่าบริการรายเดือนรอบบิลล่าสุด {bill} บ. ครบกำหนดชำระวันที่ {day}/10/2567 ตรวจสอบรายละเอียดได้ผ่านแอปพลิเคชัน")
+        acc_no = f"08{random.randint(1,9)}xxxx{random.randint(10,99)}"
+        ham_set.add(f"{tc}: หมายเลข {acc_no} ยอดค่าบริการรอบบิลล่าสุด {bill} บ. ครบกำหนดชำระวันที่ {day}/10/2567 ตรวจสอบรายละเอียดผ่านแอปพลิเคชัน")
 
     # 5. เตือนนัดหมายแพทย์ / รถยนต์ (350 samples)
     hospitals = ["รพ. จุฬาลงกรณ์", "รพ. ศิริราช", "รพ. รามาธิบดี", "คลินิกทันตกรรมสไมล์", "ศูนย์บริการรถยนต์โตโยต้า", "ศูนย์บริการฮอนด้า"]
@@ -178,7 +185,8 @@ def generate_large_thai_dataset(target_scam: int = 2500, target_ham: int = 2500)
         hosp = random.choice(hospitals)
         day = random.randint(1, 30)
         hour = random.randint(9, 16)
-        ham_set.add(f"{hosp}: แจ้งเตือนนัดหมายของท่าน วันที่ {day} ตุลาคม เวลา {hour:02d}.00 น. หากต้องการเลื่อนนัดกรุณาโทรติดต่อเจ้าหน้าที่ล่วงหน้า")
+        hn = f"HN{random.randint(100000, 999999)}"
+        ham_set.add(f"{hosp}: แจ้งเตือนนัดหมายของผู้ป่วย ({hn}) วันที่ {day} ตุลาคม เวลา {hour:02d}.00 น. หากต้องการเลื่อนนัดกรุณาโทรติดต่อเจ้าหน้าที่ล่วงหน้า")
 
     # 6. ข้อความสนทนาและทั่วไป (250 samples)
     chat_templates = [

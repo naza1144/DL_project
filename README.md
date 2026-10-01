@@ -46,9 +46,11 @@ DL_project/
 │   ├── settings.py               # การตั้งค่า Django
 │   └── urls.py                   # Main URL Routing
 ├── tests/
-│   └── test_phase1.py            # Unit Tests สำหรับ De-obfuscator และ Dataset
+│   ├── test_phase1.py            # Unit Tests สำหรับ De-obfuscator และ Dataset
+│   └── test_views.py             # Unit Tests สำหรับ Django Views และ API
 ├── manage.py                     # Django Management CLI
 ├── requirements.txt              # Dependencies ของโปรเจกต์
+├── PROJECT_REPORT.md             # เล่มรายงานวิจัยฉบับสมบูรณ์ (ที่มา ทฤษฎี สถาปัตยกรรม และการทดลอง)
 ├── REFERENCES.md                 # เอกสารอ้างอิงแหล่งที่มาของข้อมูลและบทเรียนที่นำมาใช้
 ├── slides_outline.md             # โครงสร้างสไลด์และสคริปต์นำเสนอ 15 นาที
 └── README.md                     # เอกสารกำกับโครงงานฉบับนี้
@@ -87,9 +89,9 @@ python3 manage.py runserver 0.0.0.0:8000
 ## 📊 ผลลัพธ์และตัวชี้วัดของโมเดล (Model Performance)
 
 * **Architecture:** Embedding(64) $\rightarrow$ BiLSTM(Hidden=64, 2 Layers, Dropout=0.3) $\rightarrow$ Self-Attention $\rightarrow$ Dense Classifier
-* **Dataset Size:** 6,336 ข้อความ (Train 5,068 / Test 1,268)
-* **Accuracy:** > 96%
-* **Macro F1-Score:** > 0.94
+* **Dataset Size:** 10,574 ข้อความ (สากล Kaggle 5,574 [52.71%], ไทยสังเคราะห์จากภัยคุกคามจริง 5,000 [47.29%]) (Train 8,459 / Test 2,115)
+* **Accuracy:** > 98.9%
+* **Macro F1-Score:** > 0.98
 * **Average Latency:** ~15–20 ms ต่อข้อความ
 
 ---
