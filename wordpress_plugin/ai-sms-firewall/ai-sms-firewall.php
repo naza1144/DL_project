@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: AI SMS & Phishing Firewall
+ * Plugin Name: DL SMS & Phishing Firewall
  * Plugin URI: https://github.com/naza1144/DL_project
  * Description: ระบบไฟร์วอลล์ดักจับและคัดกรอง SMS มิจฉาชีพ/สแปม/ฟิชชิ่งแบบเรียลไทม์ด้วย Deep Learning (BiLSTM + Self-Attention) เชื่อมต่อ API อัตโนมัติ
  * Version: 1.0.0
- * Author: Antigravity AI & DL Project Team
+ * Author: naza1144 | DL Project
  * Author URI: https://github.com/naza1144/DL_project
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -23,6 +23,8 @@ define('AI_SMS_FIREWALL_URL', plugin_dir_url(__FILE__));
 require_once AI_SMS_FIREWALL_DIR . 'includes/class-ai-sms-api-client.php';
 require_once AI_SMS_FIREWALL_DIR . 'includes/class-ai-sms-webhook.php';
 require_once AI_SMS_FIREWALL_DIR . 'includes/class-ai-sms-form-guard.php';
+require_once AI_SMS_FIREWALL_DIR . 'includes/class-ai-sms-community.php';
+require_once AI_SMS_FIREWALL_DIR . 'public/class-ai-sms-public.php';
 
 if (is_admin()) {
     require_once AI_SMS_FIREWALL_DIR . 'admin/class-ai-sms-admin.php';
@@ -77,6 +79,14 @@ function ai_sms_firewall_init() {
     // เริ่มต้นระบบ Form & Comment Guard
     $form_guard = new AI_SMS_Form_Guard();
     $form_guard->init();
+
+    // เริ่มต้น Reddit-style Community Engine
+    $community = new AI_SMS_Community();
+    $community->init();
+
+    // เริ่มต้น Public Shortcode [ai_sms_scanner]
+    $public = new AI_SMS_Public();
+    $public->init();
 
     // เริ่มต้นส่วนจัดการหลังบ้าน (WP-Admin)
     if (is_admin()) {
