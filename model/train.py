@@ -2,10 +2,14 @@
 Model Training Pipeline for SpamAttentionBiLSTM
 ฝึกสอนโมเดล BiLSTM + Attention, ประเมินผล Metrics และบันทึก weights.pth
 รองรับทั้งการรันผ่าน CLI ปกติ และการทำงานเป็น Generator สำหรับ Django SSE Real-time Stream
+พร้อมระบบ AI Hardening: Label Smoothing, AdamW L2 Regularization, Word Dropout, และ Early Stopping
 """
 
+import argparse
+import copy
 import json
 import os
+import random
 import sys
 import torch
 import torch.nn as nn
@@ -33,13 +37,15 @@ METRICS_PATH = os.path.join(MODEL_DIR, 'metrics.json')
 
 
 class SMSDataset(Dataset):
-    """PyTorch Dataset สำหรับแปลงข้อความเป็นเวกเตอร์ตัวเลข"""
+    """PyTorch Dataset สำหรับแปลงข้อความเป็นเวกเตอร์ตัวเลข พร้อมระบบ Online Word Dropout"""
 
-    def __init__(self, data_path: str, vocab: dict, max_len: int = 50):
+    def __init__(self, data_path: str, vocab: dict, max_len: int = 50, is_train: bool = False, word_dropout: float = 0.10):
         with open(data_path, 'r', encoding='utf-8') as f:
             self.samples = json.load(f)
         self.tokenizer = TextTokenizer(vocab=vocab)
         self.max_len = max_len
+        self.is_train = is_train
+        self.word_dropout = word_dropout
 
     def __len__(self):
         return len(self.samples)
@@ -47,21 +53,38 @@ class SMSDataset(Dataset):
     def __getitem__(self, idx):
         item = self.samples[idx]
         tokens = self.tokenizer.encode(item['text'], max_len=self.max_len)
+        if self.is_train and self.word_dropout > 0:
+            # Word Dropout: สุ่มแทนที่ content token ด้วย <UNK> (index 1) ป้องกันการจำคำเดี่ยว
+            augmented = []
+            for t in tokens:
+                if t > 3 and random.random() < self.word_dropout:
+                    augmented.append(1)  # <UNK>
+                else:
+                    augmented.append(t)
+            tokens = augmented
         return torch.tensor(tokens, dtype=torch.long), torch.tensor(item['label'], dtype=torch.float32)
 
 
-def get_data_loaders(batch_size: int = 64, max_len: int = 50):
-    """สร้าง Train และ Test DataLoader"""
+def get_data_loaders(batch_size: int = 64, max_len: int = 50, word_dropout: float = 0.10):
+    """สร้าง Train และ Test DataLoader พร้อม Data Augmentation"""
     with open(VOCAB_PATH, 'r', encoding='utf-8') as f:
         vocab = json.load(f)
 
-    train_ds = SMSDataset(TRAIN_PATH, vocab, max_len=max_len)
-    test_ds = SMSDataset(TEST_PATH, vocab, max_len=max_len)
+    train_ds = SMSDataset(TRAIN_PATH, vocab, max_len=max_len, is_train=True, word_dropout=word_dropout)
+    test_ds = SMSDataset(TEST_PATH, vocab, max_len=max_len, is_train=False, word_dropout=0.0)
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
     return train_loader, test_loader, len(vocab)
+
+
+def smooth_binary_labels(y: torch.Tensor, smoothing: float = 0.08) -> torch.Tensor:
+    """
+    Label Smoothing สำหรับ Binary Cross-Entropy
+    แปลงเป้าหมาย 0.0 -> 0.04 และ 1.0 -> 0.96 ป้องกัน overconfident logits
+    """
+    return y * (1.0 - smoothing) + 0.5 * smoothing
 
 
 def evaluate_model(model, test_loader, criterion, device):
@@ -97,20 +120,29 @@ def evaluate_model(model, test_loader, criterion, device):
     }
 
 
-def train_epochs_generator(num_epochs: int = 10, batch_size: int = 64, lr: float = 0.001):
+def train_epochs_generator(num_epochs: int = 12, batch_size: int = 64, lr: float = 0.001,
+                           label_smoothing: float = 0.08, weight_decay: float = 1e-3,
+                           patience: int = 3, word_dropout: float = 0.10):
     """
-    Generator Function สำหรับสตรีมผลการเทรนราย Epoch (ใช้ใน Django SSE)
+    Generator Function สำหรับสตรีมผลการเทรนราย Epoch (ใช้ใน Django SSE และ Standalone CLI)
+    พร้อมระบบ Early Stopping และ Learning Rate Scheduling
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    train_loader, test_loader, vocab_size = get_data_loaders(batch_size=batch_size)
+    train_loader, test_loader, vocab_size = get_data_loaders(batch_size=batch_size, word_dropout=word_dropout)
 
     model = SpamAttentionBiLSTM(vocab_size=vocab_size, embed_dim=64, hidden_dim=64, num_layers=2, dropout=0.3)
     model.to(device)
 
     criterion = nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    # ใช้ AdamW พร้อม L2 Weight Decay
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=1)
 
+    best_val_loss = float('inf')
     best_f1 = 0.0
+    best_epoch = 0
+    patience_counter = 0
+    best_model_state = None
     history = []
 
     for epoch in range(1, num_epochs + 1):
@@ -122,7 +154,11 @@ def train_epochs_generator(num_epochs: int = 10, batch_size: int = 64, lr: float
             x, y = x.to(device), y.to(device)
             optimizer.zero_grad()
             probs = model(x).squeeze(-1)
-            loss = criterion(probs, y)
+
+            # Label Smoothing ป้องกัน Overconfidence
+            targets = smooth_binary_labels(y, smoothing=label_smoothing)
+            loss = criterion(probs, targets)
+
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
@@ -135,11 +171,20 @@ def train_epochs_generator(num_epochs: int = 10, batch_size: int = 64, lr: float
 
         # ประเมินผลบน Validation/Test
         val_metrics = evaluate_model(model, test_loader, criterion, device)
+        scheduler.step(val_metrics['loss'])
 
-        # บันทึกโมเดลที่ดีที่สุด
-        if val_metrics['f1'] > best_f1:
+        # Early Stopping และ Best Model Selection (อิง Val Loss และ F1)
+        is_best = False
+        if val_metrics['loss'] < best_val_loss - 1e-4:
+            best_val_loss = val_metrics['loss']
             best_f1 = val_metrics['f1']
-            torch.save(model.state_dict(), WEIGHTS_PATH)
+            best_epoch = epoch
+            patience_counter = 0
+            best_model_state = copy.deepcopy(model.state_dict())
+            torch.save(best_model_state, WEIGHTS_PATH)
+            is_best = True
+        else:
+            patience_counter += 1
 
         epoch_data = {
             'epoch': epoch,
@@ -149,26 +194,37 @@ def train_epochs_generator(num_epochs: int = 10, batch_size: int = 64, lr: float
             'val_loss': val_metrics['loss'],
             'val_acc': val_metrics['accuracy'],
             'val_f1': val_metrics['f1'],
-            'is_best': val_metrics['f1'] == best_f1
+            'is_best': is_best
         }
         history.append(epoch_data)
 
         # ส่งข้อมูลออกเป็น Generator สตรีม
         yield epoch_data
 
+        if patience_counter >= patience:
+            print(f"\n[*] Early Stopping ถูกกระตุ้นที่ Epoch {epoch} (Val Loss ไม่ลดลงติดต่อกัน {patience} Epochs)")
+            print(f"[*] กู้คืนและบันทึกน้ำหนักโมเดลจาก Epoch ที่ดีที่สุด (Epoch {best_epoch})")
+            if best_model_state:
+                model.load_state_dict(best_model_state)
+                torch.save(best_model_state, WEIGHTS_PATH)
+            break
+
     # บันทึกประวัติสรุป
     with open(METRICS_PATH, 'w', encoding='utf-8') as f:
         json.dump({
             'history': history,
             'final_metrics': val_metrics,
-            'best_f1': best_f1
+            'best_val_loss': best_val_loss,
+            'best_f1': best_f1,
+            'best_epoch': best_epoch
         }, f, indent=2)
 
 
-def run_standalone_training(epochs: int = 10):
-    """สั่งเทรนโมเดลแบบ Standalone CLI"""
+def run_standalone_training(epochs: int = 12, batch_size: int = 64):
+    """สั่งเทรนโมเดลแบบ Standalone CLI พร้อม Parse Arguments"""
     print(f"[*] เริ่มต้นฝึกสอนโมเดล SpamAttentionBiLSTM ({epochs} Epochs)...")
-    for update in train_epochs_generator(num_epochs=epochs):
+    print(f"[*] เทคนิค Regularization: Label Smoothing (0.08) | AdamW Weight Decay (1e-3) | Word Dropout (10%)")
+    for update in train_epochs_generator(num_epochs=epochs, batch_size=batch_size):
         star = " ★ BEST" if update['is_best'] else ""
         print(f"Epoch [{update['epoch']:02d}/{update['total_epochs']:02d}] "
               f"Loss: {update['train_loss']:.4f} | "
@@ -182,4 +238,9 @@ def run_standalone_training(epochs: int = 10):
 
 
 if __name__ == '__main__':
-    run_standalone_training(epochs=10)
+    parser = argparse.ArgumentParser(description="Train SpamAttentionBiLSTM with Regularization")
+    parser.add_argument("--epochs", type=int, default=12, help="Number of training epochs")
+    parser.add_argument("--batch-size", type=int, default=64, help="Batch size for training")
+    args = parser.parse_args()
+
+    run_standalone_training(epochs=args.epochs, batch_size=args.batch_size)

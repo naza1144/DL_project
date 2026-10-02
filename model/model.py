@@ -11,18 +11,19 @@ import torch.nn.functional as F
 
 class SelfAttention(nn.Module):
     """
-    Self-Attention Mechanism
+    Self-Attention Mechanism with Attention Dropout
     คำนวณค่าน้ำหนักความสำคัญ (Attention Weights) ของแต่ละ Token ในประโยค
-    เพื่อให้โมเดลสามารถอธิบายผลได้ (Explainable AI: XAI) ว่าคำใดเป็นตัวบ่งชี้ความเสี่ยง
+    พร้อมระบบ Attention Dropout เพื่อป้องกัน Attention Collapse / Overconfidence
     """
 
-    def __init__(self, hidden_dim: int):
+    def __init__(self, hidden_dim: int, dropout: float = 0.1):
         super().__init__()
         self.projection = nn.Sequential(
             nn.Linear(hidden_dim, 64),
             nn.Tanh(),
             nn.Linear(64, 1)
         )
+        self.attn_dropout = nn.Dropout(dropout)
 
     def forward(self, lstm_outputs, mask=None):
         """
@@ -41,8 +42,9 @@ class SelfAttention(nn.Module):
             scores = scores.masked_fill(mask == 0, -1e9)
 
         attention_weights = F.softmax(scores, dim=-1)
-        # (batch_size, hidden_dim)
-        context_vector = torch.sum(lstm_outputs * attention_weights.unsqueeze(-1), dim=1)
+        # Attention Dropout ระหว่างเทรนเพื่อป้องกัน Attention กระจุกตัว
+        dropped_weights = self.attn_dropout(attention_weights)
+        context_vector = torch.sum(lstm_outputs * dropped_weights.unsqueeze(-1), dim=1)
 
         return context_vector, attention_weights
 
@@ -81,8 +83,9 @@ class SpamAttentionBiLSTM(nn.Module):
         self.embed_dim = embed_dim
         self.hidden_dim = hidden_dim
 
-        # 1. Embedding Layer
+        # 1. Embedding Layer & Embedding Dropout
         self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=0)
+        self.embed_dropout = nn.Dropout(dropout)
 
         # 2. Bidirectional LSTM
         self.lstm = nn.LSTM(
@@ -95,7 +98,7 @@ class SpamAttentionBiLSTM(nn.Module):
         )
 
         # 3. Attention Mechanism (BiLSTM output size = hidden_dim * 2)
-        self.attention = SelfAttention(hidden_dim * 2)
+        self.attention = SelfAttention(hidden_dim * 2, dropout=0.1)
 
         # 4. Dense Classifier
         self.dropout = nn.Dropout(dropout)
@@ -108,6 +111,7 @@ class SpamAttentionBiLSTM(nn.Module):
 
         # Embedding: (batch_size, seq_len, embed_dim)
         embedded = self.embedding(x)
+        embedded = self.embed_dropout(embedded)
 
         # BiLSTM: (batch_size, seq_len, hidden_dim * 2)
         lstm_out, _ = self.lstm(embedded)

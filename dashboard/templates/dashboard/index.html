@@ -1,221 +1,306 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI SMS Scam & Phishing Firewall Dashboard</title>
+  <title>AI SMS Scam Firewall</title>
+  
+  <!-- Typography: Geist & Geist Mono (Vercel Design System) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Geist"', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"Geist Mono"', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            canvas: '#09090b', // zinc-950
+            panel: '#121215',
+            surface: '#18181b', // zinc-900
+            border: '#27272a', // zinc-800
+            borderSubtle: '#1f1f23',
+            muted: '#71717a', // zinc-500
+            secondary: '#a1a1aa', // zinc-400
+          }
+        }
+      }
+    }
+  </script>
+
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
   <style>
     [x-cloak] { display: none !important; }
+
+    body {
+      background-color: #09090b;
+      color: #fafafa;
+    }
+
+    /* Clean minimal scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #09090b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+
+    .ui-panel {
+      background: #121215;
+      border: 1px solid #27272a;
+    }
+
+    .ui-card {
+      background: #18181b;
+      border: 1px solid #27272a;
+    }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased" x-data="dashboardApp()">
+<body class="min-h-screen font-sans antialiased selection:bg-zinc-800 selection:text-white" x-data="dashboardApp()">
 
-  <!-- Top Navigation Bar -->
-  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+  <!-- ==================== HEADER ==================== -->
+  <header class="border-b border-border bg-canvas/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+      
+      <!-- Brand Minimal Logo -->
       <div class="flex items-center space-x-3">
-        <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-rose-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-rose-500/20">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        <div class="h-6 w-6 rounded bg-white text-zinc-950 flex items-center justify-center font-bold text-xs">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 11.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V8.26l7-3.89v7.62z"/>
           </svg>
         </div>
-        <div>
-          <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-            AI SMS Scam Firewall
-          </h1>
-          <p class="text-xs text-slate-400">ระบบไฟร์วอลล์ตรวจจับ SMS มิจฉาชีพ (Deep Learning BiLSTM + Attention)</p>
+        <div class="flex items-center space-x-2">
+          <span class="text-sm font-semibold tracking-tight text-white">AI SMS Scam Firewall</span>
+          <span class="text-xs text-muted font-mono">BiLSTM</span>
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="flex space-x-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-sm">
+      <!-- Clean Tabs -->
+      <nav class="flex items-center space-x-1">
         <button @click="currentTab = 'inspector'"
-                :class="currentTab === 'inspector' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'"
-                class="px-4 py-1.5 rounded-lg font-medium transition">
-          🔍 Interactive Inspector
+                :class="currentTab === 'inspector' ? 'bg-surface text-white border-border' : 'text-muted hover:text-secondary border-transparent'"
+                class="px-3 py-1.5 rounded-md text-xs font-medium border transition-colors">
+          Inspector
         </button>
+
         <button @click="currentTab = 'gateway'"
-                :class="currentTab === 'gateway' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'"
-                class="px-4 py-1.5 rounded-lg font-medium transition flex items-center space-x-1.5">
-          <span>⚡ Live Telco Gateway</span>
-          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                :class="currentTab === 'gateway' ? 'bg-surface text-white border-border' : 'text-muted hover:text-secondary border-transparent'"
+                class="px-3 py-1.5 rounded-md text-xs font-medium border transition-colors flex items-center space-x-1.5">
+          <span>Gateway</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
         </button>
+
         <button @click="currentTab = 'training'"
-                :class="currentTab === 'training' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'"
-                class="px-4 py-1.5 rounded-lg font-medium transition">
-          📊 Model Training (SSE)
+                :class="currentTab === 'training' ? 'bg-surface text-white border-border' : 'text-muted hover:text-secondary border-transparent'"
+                class="px-3 py-1.5 rounded-md text-xs font-medium border transition-colors">
+          Training
         </button>
       </nav>
+
+      <!-- Right Meta Status -->
+      <div class="hidden sm:flex items-center space-x-3 text-xs">
+        <div class="flex items-center space-x-1.5 text-muted font-mono text-[11px]">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span>Online</span>
+        </div>
+      </div>
+
     </div>
   </header>
 
-  <!-- Main Content Container -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="max-w-6xl mx-auto px-4 py-8">
 
-    <!-- ==================== TAB 1: INTERACTIVE INSPECTOR ==================== -->
-    <div x-show="currentTab === 'inspector'" x-transition>
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <!-- ================================================================ -->
+    <!-- TAB 1: INSPECTOR                                                -->
+    <!-- ================================================================ -->
+    <div x-show="currentTab === 'inspector'" x-transition:enter="transition duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+      
+      <!-- Section Title -->
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-semibold text-white tracking-tight">Interactive Inspector</h2>
+          <p class="text-xs text-muted mt-0.5">Test individual SMS messages for scams, phishing, and adversarial character masking.</p>
+        </div>
+        <div class="text-xs font-mono text-muted">
+          <span x-text="result ? 'Inference: ' + result.latency_ms + 'ms' : 'Ready'">Ready</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        <!-- Left Column: Input and Preset Messages -->
-        <div class="lg:col-span-6 space-y-6">
-          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
-            <h2 class="text-base font-semibold text-slate-200 mb-2 flex items-center justify-between">
-              <span>ป้อนข้อความ SMS ที่ต้องการวิเคราะห์</span>
-              <span class="text-xs px-2.5 py-1 bg-indigo-500/10 text-indigo-400 rounded-full border border-indigo-500/20">De-obfuscator Enabled</span>
-            </h2>
-            <p class="text-xs text-slate-400 mb-4">ระบบรองรับข้อความภาษาไทยและอังกฤษ พร้อมระบบถอดรหัสคำอำพรางตัว (เช่น กู้งิu, รั บ เ งิ น)</p>
+        <!-- Left: Input & Presets -->
+        <div class="lg:col-span-6 space-y-4">
+          
+          <div class="ui-panel rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-secondary">Input Text</label>
+              <span class="text-[11px] font-mono text-muted" x-text="inputText.length + ' chars'">0 chars</span>
+            </div>
 
             <textarea x-model="inputText"
+                      @keydown.ctrl.enter="analyzeMessage()"
                       rows="4"
-                      class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
-                      placeholder="พิมพ์หรือวางข้อความ SMS ที่นี่..."></textarea>
+                      class="w-full bg-surface border border-border rounded-md p-3 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition font-mono leading-relaxed"
+                      placeholder="Type or paste SMS content here..."></textarea>
 
-            <div class="mt-4 flex items-center justify-between">
+            <div class="mt-3 flex items-center justify-between">
               <button @click="analyzeMessage()"
                       :disabled="analyzing || !inputText.trim()"
-                      class="px-6 py-2.5 bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-medium text-sm rounded-xl shadow-lg shadow-indigo-500/20 transition flex items-center space-x-2 disabled:opacity-50">
-                <svg x-show="analyzing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      class="px-4 py-2 bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs rounded-md transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-1.5">
+                <svg x-show="analyzing" class="animate-spin -ml-0.5 mr-1.5 h-3 w-3 text-zinc-950" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>วิเคราะห์ความเสี่ยง (Analyze)</span>
+                <span x-text="analyzing ? 'Analyzing...' : 'Analyze Message'"></span>
               </button>
-              <button @click="inputText = ''" class="text-xs text-slate-500 hover:text-slate-300">ล้างข้อความ</button>
+
+              <button @click="inputText = ''; result = null;" 
+                      class="text-xs text-muted hover:text-secondary transition px-2 py-1">
+                Clear
+              </button>
             </div>
           </div>
 
-          <!-- Quick Test Presets -->
-          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
-            <h3 class="text-sm font-semibold text-slate-300 mb-3">⚡ ตัวอย่างข้อความทดสอบด่วน (Quick Presets)</h3>
-            <div class="space-y-2">
+          <!-- Sample Presets -->
+          <div class="ui-panel rounded-lg p-4">
+            <h3 class="text-xs font-medium text-secondary mb-2.5">Sample Test Cases</h3>
+            
+            <div class="space-y-1.5">
               <button @click="setPreset('ยินดีด้วย! คุณได้รับสิทธิ์ กู้งิuด่วu 50,000 บ. คลิก http://bit.ly/loan999')"
-                      class="w-full text-left p-3 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-rose-500/20 hover:border-rose-500/40 text-xs transition">
-                <span class="inline-block px-2 py-0.5 bg-rose-500/20 text-rose-300 font-semibold rounded mr-1">SCAM</span>
-                <span class="text-slate-300">เงินกู้ด่วนอำพรางคำ (กู้งิuด่วu + ลิงก์ย่อ bit.ly)</span>
+                      class="w-full text-left p-2.5 rounded-md hover:bg-surface border border-transparent hover:border-border transition text-xs flex items-center justify-between group">
+                <div class="min-w-0 pr-2">
+                  <span class="font-mono text-zinc-200 truncate block">ยินดีด้วย! คุณได้รับสิทธิ์ กู้งิuด่วu 50,000 บ. คลิก http://bit.ly/loan999</span>
+                  <span class="text-[11px] text-muted">Masked Loan Scam (กู้งิuด่วu + bit.ly)</span>
+                </div>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 flex-shrink-0">Scam</span>
               </button>
 
               <button @click="setPreset('ด ่ ว น ร ั บ เ ง ิ น คืนค่าประกันมิเตอร์ไฟฟ้า กฟภ. 3,500 บ. กด lin.ee/m-pea')"
-                      class="w-full text-left p-3 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-rose-500/20 hover:border-rose-500/40 text-xs transition">
-                <span class="inline-block px-2 py-0.5 bg-rose-500/20 text-rose-300 font-semibold rounded mr-1">SCAM</span>
-                <span class="text-slate-300">หลอกคืนเงินค่าไฟ (เคาะวรรคคำ + แอบอ้าง กฟภ.)</span>
+                      class="w-full text-left p-2.5 rounded-md hover:bg-surface border border-transparent hover:border-border transition text-xs flex items-center justify-between group">
+                <div class="min-w-0 pr-2">
+                  <span class="font-mono text-zinc-200 truncate block">ด ่ ว น ร ั บ เ ง ิ น คืนค่าประกันมิเตอร์ไฟฟ้า กฟภ. 3,500 บ. กด lin.ee/m-pea</span>
+                  <span class="text-[11px] text-muted">Fake Electricity Refund (Spaced Chars)</span>
+                </div>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 flex-shrink-0">Scam</span>
               </button>
 
               <button @click="setPreset('แจกเครดิตฟรี 300 บาท ไม่ต้องฝากก่อน ถอนได้จริง เว็บตรง 100% คลิก bit.ly/slot-bonus')"
-                      class="w-full text-left p-3 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-rose-500/20 hover:border-rose-500/40 text-xs transition">
-                <span class="inline-block px-2 py-0.5 bg-rose-500/20 text-rose-300 font-semibold rounded mr-1">SPAM</span>
-                <span class="text-slate-300">สแปมเว็บพนัน / คาสิโนออนไลน์</span>
+                      class="w-full text-left p-2.5 rounded-md hover:bg-surface border border-transparent hover:border-border transition text-xs flex items-center justify-between group">
+                <div class="min-w-0 pr-2">
+                  <span class="font-mono text-zinc-200 truncate block">แจกเครดิตฟรี 300 บาท ไม่ต้องฝากก่อน ถอนได้จริง เว็บตรง 100% คลิก bit.ly/slot-bonus</span>
+                  <span class="text-[11px] text-muted">Gambling Spam</span>
+                </div>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 flex-shrink-0">Spam</span>
               </button>
 
               <button @click="setPreset('รหัส OTP ของคุณคือ 849201 สำหรับเข้าสู่ระบบ K PLUS หมดอายุใน 5 นาที ห้ามเปิดเผยแก่บุคคลอื่น')"
-                      class="w-full text-left p-3 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-emerald-500/20 hover:border-emerald-500/40 text-xs transition">
-                <span class="inline-block px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-semibold rounded mr-1">SAFE</span>
-                <span class="text-slate-300">รหัส OTP ธนาคารกสิกรไทยของจริง</span>
+                      class="w-full text-left p-2.5 rounded-md hover:bg-surface border border-transparent hover:border-border transition text-xs flex items-center justify-between group">
+                <div class="min-w-0 pr-2">
+                  <span class="font-mono text-zinc-200 truncate block">รหัส OTP ของคุณคือ 849201 สำหรับเข้าสู่ระบบ K PLUS หมดอายุใน 5 นาที</span>
+                  <span class="text-[11px] text-muted">Legitimate Bank OTP</span>
+                </div>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">Safe</span>
               </button>
 
               <button @click="setPreset('Flash Express: พัสดุเลขที่ TH0192 กำลังนำส่งโดยพนักงาน คุณสมชาย เบอร์ติดต่อ 081-234-5678')"
-                      class="w-full text-left p-3 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-emerald-500/20 hover:border-emerald-500/40 text-xs transition">
-                <span class="inline-block px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-semibold rounded mr-1">SAFE</span>
-                <span class="text-slate-300">แจ้งสถานะพัสดุ Flash Express ของจริง</span>
+                      class="w-full text-left p-2.5 rounded-md hover:bg-surface border border-transparent hover:border-border transition text-xs flex items-center justify-between group">
+                <div class="min-w-0 pr-2">
+                  <span class="font-mono text-zinc-200 truncate block">Flash Express: พัสดุเลขที่ TH0192 กำลังนำส่งโดยพนักงาน คุณสมชาย</span>
+                  <span class="text-[11px] text-muted">Legitimate Logistics SMS</span>
+                </div>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">Safe</span>
               </button>
             </div>
           </div>
+
         </div>
 
-        <!-- Right Column: Results & Explainable AI Output -->
-        <div class="lg:col-span-6 space-y-6">
+        <!-- Right: Results View -->
+        <div class="lg:col-span-6 space-y-4">
+          
           <template x-if="result">
-            <div class="space-y-6">
-              
-              <!-- Risk Score Card -->
-              <div class="bg-slate-950 border rounded-2xl p-6 shadow-xl"
-                   :class="result.is_scam ? 'border-rose-500/40' : 'border-emerald-500/40'">
-                <div class="flex items-center justify-between mb-4">
+            <div class="space-y-4">
+
+              <!-- Verdict Box -->
+              <div class="ui-panel rounded-lg p-4">
+                <div class="flex items-center justify-between">
                   <div>
-                    <span class="text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full"
-                          :class="result.is_scam ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'"
-                          x-text="result.risk_level"></span>
-                    <h3 class="text-lg font-bold text-white mt-1" x-text="result.status_text"></h3>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-3xl font-extrabold"
-                         :class="result.is_scam ? 'text-rose-400' : 'text-emerald-400'"
-                         x-text="result.risk_score + '%'"></div>
-                    <div class="text-xs text-slate-500">Scam Probability</div>
-                  </div>
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden">
-                  <div class="h-2.5 rounded-full transition-all duration-500"
-                       :style="'width: ' + result.risk_score + '%'"
-                       :class="result.is_scam ? 'bg-gradient-to-r from-orange-500 to-rose-500' : 'bg-emerald-500'"></div>
-                </div>
-
-                <!-- De-obfuscator Warning -->
-                <template x-if="result.has_obfuscation">
-                  <div class="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start space-x-2">
-                    <svg class="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                    <div>
-                      <span class="font-bold">ตรวจพบคำอำพรางตัว (Adversarial Camouflage Detected):</span>
-                      <p class="mt-0.5 text-slate-300">ข้อความหลังถอดรหัส: "<span class="text-amber-200 font-medium" x-text="result.cleaned_text"></span>"</p>
+                    <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Classification</span>
+                    <div class="text-sm font-semibold mt-0.5 flex items-center space-x-2">
+                      <span class="w-2 h-2 rounded-full" :class="result.is_scam ? 'bg-red-500' : 'bg-emerald-500'"></span>
+                      <span class="text-white" x-text="result.status_text"></span>
                     </div>
+                  </div>
+
+                  <div class="text-right">
+                    <span class="text-[10px] font-mono uppercase tracking-wider text-muted">Confidence</span>
+                    <div class="text-lg font-mono font-bold"
+                         :class="result.is_scam ? 'text-red-400' : 'text-emerald-400'"
+                         x-text="result.risk_score + '%'"></div>
+                  </div>
+                </div>
+
+                <!-- Camouflage Cleaned Text Notice -->
+                <template x-if="result.has_obfuscation">
+                  <div class="mt-3 pt-3 border-t border-borderSubtle text-xs">
+                    <div class="text-[11px] font-medium text-amber-400 mb-1">Normalized Text (Deobfuscated)</div>
+                    <div class="font-mono text-zinc-300 bg-surface px-2.5 py-1.5 rounded border border-borderSubtle text-[11px]"
+                         x-text="result.cleaned_text"></div>
                   </div>
                 </template>
               </div>
 
-              <!-- Explainable AI (XAI) Token Attention Heatmap -->
-              <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                <h4 class="text-sm font-semibold text-slate-200 mb-2 flex items-center justify-between">
-                  <span>🧠 การอธิบายผลโมเดล (Explainable AI: Attention Weights)</span>
-                  <span class="text-xs text-slate-500">คำที่ AI ให้ความสำคัญ</span>
-                </h4>
-                <p class="text-xs text-slate-400 mb-4">ไฮไลต์สีแดง/ส้มบ่งชี้คำที่กระตุ้นให้โมเดลตัดสินว่าเป็นข้อความมิจฉาชีพ:</p>
+              <!-- Attention Token Weights -->
+              <div class="ui-panel rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-medium text-secondary">Token Attention Weights</span>
+                  <span class="text-[10px] font-mono text-muted">Self-Attention (&alpha;)</span>
+                </div>
 
-                <div class="p-4 bg-slate-900/80 rounded-xl border border-slate-800 flex flex-wrap gap-2 items-center leading-relaxed">
+                <div class="p-2.5 bg-surface rounded border border-borderSubtle flex flex-wrap gap-1 items-center">
                   <template x-for="(item, idx) in result.tokens_highlight" :key="idx">
-                    <span class="px-2 py-1 rounded-lg text-xs font-mono font-medium transition cursor-default"
-                          :title="'Attention Weight: ' + item.weight + '%'"
-                          :style="'background-color: rgba(244, 63, 94, ' + (item.weight / 100) + '); color: ' + (item.weight > 40 ? '#ffffff' : '#cbd5e1')">
+                    <span class="px-2 py-0.5 rounded text-xs font-mono border"
+                          :style="'background-color: ' + (item.weight > 30 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(39, 39, 42, 0.6)') + '; border-color: ' + (item.weight > 30 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(63, 63, 70, 0.3)') + '; color: ' + (item.weight > 30 ? '#fca5a5' : '#a1a1aa')">
                       <span x-text="item.token"></span>
-                      <sub class="text-[9px] opacity-75 ml-0.5" x-text="item.weight + '%'"></sub>
+                      <span class="text-[9px] opacity-60 ml-0.5" x-text="item.weight + '%'"></span>
                     </span>
                   </template>
                 </div>
               </div>
 
-              <!-- Actionable Safety Card -->
-              <div class="bg-slate-950 border border-indigo-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
-                <div class="flex items-center space-x-3 mb-3">
-                  <div class="p-2 bg-indigo-500/20 text-indigo-400 rounded-xl">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                    </svg>
+              <!-- Safety Hotline & Policy -->
+              <div class="ui-panel rounded-lg p-4">
+                <div class="text-xs font-medium text-secondary mb-2">Official Agency Policy</div>
+                <div class="space-y-1.5 text-xs">
+                  <div class="flex justify-between py-1 border-b border-borderSubtle">
+                    <span class="text-muted">Detected Organization:</span>
+                    <span class="text-zinc-200" x-text="result.safety_card.name"></span>
                   </div>
-                  <div>
-                    <h4 class="text-sm font-bold text-white">Actionable Safety Card</h4>
-                    <p class="text-xs text-slate-400">คำแนะนำและความช่วยเหลือเมื่อถูกแอบอ้าง</p>
+                  <div class="flex justify-between py-1 border-b border-borderSubtle">
+                    <span class="text-muted">Verified Hotline:</span>
+                    <span class="font-mono text-red-400 font-semibold" x-text="result.safety_card.official_phone"></span>
                   </div>
-                </div>
-
-                <div class="space-y-2 text-xs">
-                  <div class="flex justify-between py-1 border-b border-slate-900">
-                    <span class="text-slate-400">หน่วยงานที่ตรวจพบ:</span>
-                    <span class="font-semibold text-slate-200" x-text="result.safety_card.name"></span>
-                  </div>
-                  <div class="flex justify-between py-1 border-b border-slate-900">
-                    <span class="text-slate-400">เบอร์ติดต่อทางการจริง:</span>
-                    <span class="font-bold text-rose-400 text-sm" x-text="result.safety_card.official_phone"></span>
-                  </div>
-                  <div class="py-1">
-                    <span class="text-slate-400 block mb-1">นโยบายความปลอดภัยทางการ:</span>
-                    <p class="text-slate-300 bg-slate-900 p-2.5 rounded-lg border border-slate-850" x-text="result.safety_card.policy"></p>
+                  <div class="pt-1.5">
+                    <span class="text-muted block mb-1 text-[11px]">Recommended Action:</span>
+                    <div class="text-zinc-300 bg-surface p-2.5 rounded text-xs leading-relaxed" x-text="result.safety_card.policy"></div>
                   </div>
                 </div>
               </div>
@@ -223,108 +308,98 @@
             </div>
           </template>
 
+          <!-- Empty State -->
           <template x-if="!result">
-            <div class="bg-slate-950/60 border border-slate-800/80 border-dashed rounded-2xl p-12 text-center text-slate-500">
-              <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-              </svg>
-              <p class="text-sm font-medium">ยังไม่มีผลการวิเคราะห์</p>
-              <p class="text-xs mt-1">พิมพ์ข้อความทางซ้าย หรือคลิกตัวอย่างทดสอบด่วนเพื่อดูผลลัพธ์</p>
+            <div class="ui-panel rounded-lg p-10 text-center text-muted text-xs">
+              Select a sample test case on the left or type a custom message to inspect.
             </div>
           </template>
+
         </div>
 
       </div>
     </div>
 
 
-    <!-- ==================== TAB 2: LIVE TELCO GATEWAY SIMULATOR ==================== -->
-    <div x-show="currentTab === 'gateway'" x-cloak x-transition>
+    <!-- ================================================================ -->
+    <!-- TAB 2: GATEWAY STREAM                                           -->
+    <!-- ================================================================ -->
+    <div x-show="currentTab === 'gateway'" x-cloak x-transition:enter="transition duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
       <div class="space-y-6">
-        
-        <!-- Gateway Header & Stats Controls -->
-        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-wrap items-center justify-between gap-4">
+
+        <!-- Controls -->
+        <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-bold text-white flex items-center space-x-2">
-              <span>Live Telecom SMS Gateway Simulation</span>
-              <span class="text-xs px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded border border-rose-500/30">SSE Real-Time</span>
-            </h2>
-            <p class="text-xs text-slate-400 mt-1">จำลองระบบดักจับข้อความขาเข้าของผู้ให้บริการเครือข่ายมือถือ กรองและสกัดกั้นแบบสด</p>
+            <h2 class="text-base font-semibold text-white tracking-tight">Live Telco Gateway Stream</h2>
+            <p class="text-xs text-muted mt-0.5">Real-time SMS ingestion and threat mitigation stream.</p>
           </div>
 
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-2">
             <button @click="startGatewayStream()"
                     :disabled="gatewayRunning"
-                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center space-x-2 disabled:opacity-50">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    class="px-3.5 py-1.5 bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs rounded-md transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-1.5">
+              <svg x-show="gatewayRunning" class="animate-spin -ml-0.5 mr-1 h-3 w-3 text-zinc-950" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span x-text="gatewayRunning ? 'กำลังสตรีม...' : 'เริ่มจำลองสตรีมสด (Start Stream)'"></span>
+              <span x-text="gatewayRunning ? 'Streaming...' : 'Start Stream'"></span>
             </button>
-            <button @click="clearGatewayFeed()" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl text-sm font-medium border border-slate-800 transition">
-              ล้างหน้าจอ
+
+            <button @click="clearGatewayFeed()" 
+                    class="px-3 py-1.5 text-xs text-muted hover:text-secondary border border-border rounded-md hover:bg-surface transition">
+              Clear
             </button>
           </div>
         </div>
 
-        <!-- Metric Counter Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 shadow">
-            <div class="text-xs text-slate-500">ข้อความประมวลผลทั้งหมด</div>
-            <div class="text-2xl font-bold text-white mt-1" x-text="gatewayStats.total">0</div>
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="ui-panel rounded-lg p-3.5">
+            <div class="text-[11px] font-mono text-muted uppercase">Processed</div>
+            <div class="text-xl font-mono font-bold text-white mt-0.5" x-text="gatewayStats.total">0</div>
           </div>
-          <div class="bg-slate-950 border border-rose-500/20 rounded-xl p-4 shadow">
-            <div class="text-xs text-rose-400">สกัดกั้นสำเร็จ (Blocked)</div>
-            <div class="text-2xl font-bold text-rose-400 mt-1" x-text="gatewayStats.blocked">0</div>
+          <div class="ui-panel rounded-lg p-3.5">
+            <div class="text-[11px] font-mono text-muted uppercase">Blocked</div>
+            <div class="text-xl font-mono font-bold text-red-400 mt-0.5" x-text="gatewayStats.blocked">0</div>
           </div>
-          <div class="bg-slate-950 border border-emerald-500/20 rounded-xl p-4 shadow">
-            <div class="text-xs text-emerald-400">ข้อความปลอดภัย (Passed)</div>
-            <div class="text-2xl font-bold text-emerald-400 mt-1" x-text="gatewayStats.passed">0</div>
+          <div class="ui-panel rounded-lg p-3.5">
+            <div class="text-[11px] font-mono text-muted uppercase">Passed</div>
+            <div class="text-xl font-mono font-bold text-emerald-400 mt-0.5" x-text="gatewayStats.passed">0</div>
           </div>
-          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 shadow">
-            <div class="text-xs text-slate-500">อัตราการสกัดกั้น (Block Rate)</div>
-            <div class="text-2xl font-bold text-indigo-400 mt-1" x-text="gatewayStats.block_rate + '%'">0%</div>
+          <div class="ui-panel rounded-lg p-3.5">
+            <div class="text-[11px] font-mono text-muted uppercase">Block Rate</div>
+            <div class="text-xl font-mono font-bold text-zinc-200 mt-0.5" x-text="gatewayStats.block_rate + '%'">0%</div>
           </div>
         </div>
 
-        <!-- Live Traffic Feed Table -->
-        <div class="bg-slate-950 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-          <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-            <h3 class="text-sm font-semibold text-slate-200">📡 Live Traffic Filter Feed</h3>
-            <span class="text-xs text-slate-500" x-text="gatewayFeed.length + ' รายการล่าสุด'"></span>
+        <!-- Table Stream -->
+        <div class="ui-panel rounded-lg overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-border text-xs font-medium text-secondary flex justify-between">
+            <span>Captured Traffic</span>
+            <span class="font-mono text-muted" x-text="gatewayFeed.length + ' packets'">0 packets</span>
           </div>
 
-          <div class="divide-y divide-slate-850 max-h-[500px] overflow-y-auto">
+          <div class="divide-y divide-borderSubtle max-h-[460px] overflow-y-auto">
             <template x-for="item in gatewayFeed" :key="item.id">
-              <div class="p-4 flex items-center justify-between gap-4 hover:bg-slate-900/40 transition">
+              <div class="px-4 py-2.5 flex items-center justify-between gap-4 hover:bg-surface transition text-xs">
                 <div class="flex items-center space-x-3 min-w-0">
-                  <span class="px-2.5 py-1 text-xs font-bold rounded-lg uppercase tracking-wide flex-shrink-0"
-                        :class="item.action === 'BLOCKED' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'"
+                  <span class="font-mono text-[10px] px-1.5 py-0.5 rounded font-medium flex-shrink-0"
+                        :class="item.action === 'BLOCKED' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'"
                         x-text="item.action"></span>
-                  <div class="min-w-0">
-                    <div class="flex items-center space-x-2">
-                      <span class="text-xs font-mono font-bold text-slate-300" x-text="item.sender"></span>
-                      <template x-if="item.has_obfuscation">
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Camouflage</span>
-                      </template>
-                      <span class="text-[10px] text-slate-500" x-text="item.latency_ms + ' ms'"></span>
-                    </div>
-                    <p class="text-xs text-slate-400 truncate mt-0.5" x-text="item.raw_text"></p>
-                  </div>
+
+                  <span class="font-mono text-zinc-300 flex-shrink-0" x-text="item.sender"></span>
+                  <p class="text-muted truncate font-mono text-[11px]" x-text="item.raw_text"></p>
                 </div>
 
-                <div class="text-right flex-shrink-0">
-                  <span class="text-xs font-mono font-bold"
-                        :class="item.is_scam ? 'text-rose-400' : 'text-emerald-400'"
-                        x-text="item.risk_score + '%'"></span>
+                <div class="text-right flex-shrink-0 font-mono text-[11px] text-muted">
+                  <span x-text="item.latency_ms + 'ms'"></span>
                 </div>
               </div>
             </template>
 
             <template x-if="gatewayFeed.length === 0">
-              <div class="p-12 text-center text-slate-600 text-xs">
-                ยังไม่มีการสตรีมข้อความ กดปุ่ม "เริ่มจำลองสตรีมสด" ด้านบนเพื่อเริ่มการทดสอบ
+              <div class="p-10 text-center text-xs text-muted">
+                No active traffic. Click "Start Stream" above to simulate telco traffic.
               </div>
             </template>
           </div>
@@ -334,59 +409,80 @@
     </div>
 
 
-    <!-- ==================== TAB 3: MODEL TRAINING (SSE) ==================== -->
-    <div x-show="currentTab === 'training'" x-cloak x-transition>
+    <!-- ================================================================ -->
+    <!-- TAB 3: MODEL TRAINING                                           -->
+    <!-- ================================================================ -->
+    <div x-show="currentTab === 'training'" x-cloak x-transition:enter="transition duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
       <div class="space-y-6">
 
-        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-wrap items-center justify-between gap-4">
+        <!-- Controls -->
+        <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-bold text-white flex items-center space-x-2">
-              <span>Deep Learning Training Monitor</span>
-              <span class="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">BiLSTM + Attention</span>
-            </h2>
-            <p class="text-xs text-slate-400 mt-1">สตรีมผลการฝึกสอนโมเดลราย Epoch ผ่าน Server-Sent Events (SSE) ตามข้อกำหนดสัปดาห์ที่ 15</p>
+            <h2 class="text-base font-semibold text-white tracking-tight">Model Training Monitor</h2>
+            <p class="text-xs text-muted mt-0.5">Streaming Epoch metrics via Server-Sent Events (SSE).</p>
           </div>
 
           <button @click="startTrainingStream()"
                   :disabled="trainingRunning"
-                  class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center space-x-2 disabled:opacity-50">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  class="px-4 py-2 bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-xs rounded-md transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-1.5">
+            <svg x-show="trainingRunning" class="animate-spin -ml-0.5 mr-1 h-3 w-3 text-zinc-950" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span x-text="trainingRunning ? 'กำลังเทรนโมเดล...' : 'เริ่มฝึกสอนโมเดล (Start Training)'"></span>
+            <span x-text="trainingRunning ? 'Training...' : 'Start Training'"></span>
           </button>
         </div>
 
-        <!-- Training Canvas Graph -->
-        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-semibold text-slate-200">📈 Training Curves (Real-Time HTML5 Canvas)</h3>
-            <div class="flex items-center space-x-4 text-xs">
-              <div class="flex items-center space-x-1.5">
-                <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
-                <span class="text-slate-400">Loss (Loss Curve)</span>
-              </div>
-              <div class="flex items-center space-x-1.5">
-                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
-                <span class="text-slate-400">Accuracy (Acc Curve)</span>
-              </div>
-            </div>
+        <!-- Metrics -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="ui-panel rounded-lg p-3.5">
+            <div class="text-[11px] font-mono text-muted uppercase">Epoch</div>
+            <div class="text-xl font-mono font-bold text-white mt-0.5" x-text="latestEpoch ? latestEpoch.epoch + ' / ' + latestEpoch.total_epochs : '- / 10'">- / 10</div>
           </div>
-
-          <div class="w-full bg-slate-900 rounded-xl p-4 border border-slate-850">
-            <canvas id="trainingChart" class="w-full h-64"></canvas>
+          <div class="ui-panel rounded-lg p-3.5">
+            <div class="text-[11px] font-mono text-muted uppercase">Train Loss</div>
+            <div class="text-xl font-mono font-bold text-red-400 mt-0.5" x-text="latestEpoch ? latestEpoch.train_loss : '-'">-</div>
+          </div>
+          <div class="ui-panel rounded-lg p-3.5">
+            <div class="text-[11px] font-mono text-muted uppercase">Train Acc</div>
+            <div class="text-xl font-mono font-bold text-emerald-400 mt-0.5" x-text="latestEpoch ? (latestEpoch.train_acc * 100).toFixed(1) + '%' : '-'">-</div>
+          </div>
+          <div class="ui-panel rounded-lg p-3.5">
+            <div class="text-[11px] font-mono text-muted uppercase">Val F1</div>
+            <div class="text-xl font-mono font-bold text-zinc-200 mt-0.5" x-text="latestEpoch ? latestEpoch.val_f1 : '-'">-</div>
           </div>
         </div>
 
-        <!-- Training Log Output -->
-        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
-          <h3 class="text-sm font-semibold text-slate-200 mb-3 font-mono">Terminal Output & Metrics History</h3>
-          <div class="bg-black/60 rounded-xl p-4 font-mono text-xs text-emerald-400 h-48 overflow-y-auto space-y-1">
+        <!-- Canvas Chart -->
+        <div class="ui-panel rounded-lg p-4">
+          <div class="flex items-center justify-between mb-3 text-xs">
+            <span class="text-secondary font-medium">Training History</span>
+            <div class="flex items-center space-x-3 font-mono text-[11px]">
+              <span class="flex items-center space-x-1">
+                <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+                <span class="text-muted">Loss</span>
+              </span>
+              <span class="flex items-center space-x-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                <span class="text-muted">Accuracy</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="w-full bg-surface rounded p-2 border border-borderSubtle">
+            <canvas id="trainingChart" class="w-full h-56"></canvas>
+          </div>
+        </div>
+
+        <!-- Console -->
+        <div class="ui-panel rounded-lg p-4">
+          <div class="text-xs font-mono text-muted mb-2">Terminal Logs</div>
+          <div class="bg-surface rounded p-3 font-mono text-[11px] text-zinc-300 h-40 overflow-y-auto space-y-0.5 border border-borderSubtle">
             <template x-for="(log, i) in trainingLogs" :key="i">
-              <div x-text="log"></div>
+              <div class="leading-relaxed" x-text="log"></div>
             </template>
             <template x-if="trainingLogs.length === 0">
-              <div class="text-slate-600">กดปุ่ม "เริ่มฝึกสอนโมเดล" เพื่อสังเกตการณ์การสตรีมข้อมูลผ่าน SSE</div>
+              <div class="text-muted">Ready to stream logs. Click "Start Training" to begin.</div>
             </template>
           </div>
         </div>
@@ -396,7 +492,7 @@
 
   </main>
 
-  <!-- Frontend Logic in Alpine.js -->
+  <!-- ==================== FRONTEND REACTIVE STATE (Alpine.js) ==================== -->
   <script>
     function dashboardApp() {
       return {
@@ -416,11 +512,24 @@
         trainingEventSource: null,
         trainingLogs: [],
         epochsData: [],
+        latestEpoch: null,
 
         init() {
-          // Initialize canvas
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('tab')) {
+            this.currentTab = urlParams.get('tab');
+          }
+          if (urlParams.get('preset')) {
+            const p = urlParams.get('preset');
+            if (p === 'scam1') this.setPreset('ยินดีด้วย! คุณได้รับสิทธิ์ กู้งิuด่วu 50,000 บ. คลิก http://bit.ly/loan999');
+            else if (p === 'scam2') this.setPreset('ด ่ ว น ร ั บ เ ง ิ น คืนค่าประกันมิเตอร์ไฟฟ้า กฟภ. 3,500 บ. กด lin.ee/m-pea');
+            else if (p === 'safe1') this.setPreset('รหัส OTP ของคุณคือ 849201 สำหรับเข้าสู่ระบบ K PLUS หมดอายุใน 5 นาที ห้ามเปิดเผยแก่บุคคลอื่น');
+          }
           this.$nextTick(() => {
             this.drawChart();
+          });
+          window.addEventListener('resize', () => {
+            if (this.currentTab === 'training') this.drawChart();
           });
         },
 
@@ -440,7 +549,7 @@
             });
             this.result = await resp.json();
           } catch (e) {
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + e);
+            alert('Server error: ' + e);
           } finally {
             this.analyzing = false;
           }
@@ -482,6 +591,7 @@
           this.trainingRunning = true;
           this.trainingLogs = [];
           this.epochsData = [];
+          this.latestEpoch = null;
 
           if (this.trainingEventSource) this.trainingEventSource.close();
           this.trainingEventSource = new EventSource('/train_stream/');
@@ -496,6 +606,7 @@
               this.trainingEventSource.close();
             } else if (data.epoch) {
               this.epochsData.push(data);
+              this.latestEpoch = data;
               this.trainingLogs.push(`Epoch [${data.epoch}/${data.total_epochs}] Loss: ${data.train_loss} | Acc: ${(data.train_acc*100).toFixed(1)}% | Val F1: ${data.val_f1}`);
               this.drawChart();
             }
@@ -525,57 +636,57 @@
           ctx.clearRect(0, 0, w, h);
 
           // Grid lines
-          ctx.strokeStyle = '#1e293b';
+          ctx.strokeStyle = '#27272a';
           ctx.lineWidth = 1;
-          for (let y = 30; y < h; y += 40) {
+          for (let y = 25; y < h - 25; y += 30) {
             ctx.beginPath();
-            ctx.moveTo(30, y);
-            ctx.lineTo(w - 20, y);
+            ctx.moveTo(35, y);
+            ctx.lineTo(w - 15, y);
             ctx.stroke();
           }
 
           if (this.epochsData.length === 0) {
-            ctx.fillStyle = '#64748b';
-            ctx.font = '12px sans-serif';
+            ctx.fillStyle = '#71717a';
+            ctx.font = '12px "Geist", sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('กราฟจะแสดงผลเมื่อเริ่มการฝึกสอนโมเดล', w / 2, h / 2);
+            ctx.fillText('Chart will display after starting training', w / 2, h / 2);
             return;
           }
 
           const pts = this.epochsData.length;
           const stepX = (w - 60) / Math.max(pts - 1, 1);
 
-          // Draw Loss (Red/Orange)
-          ctx.strokeStyle = '#f43f5e';
-          ctx.lineWidth = 2.5;
+          // Draw Loss (Red)
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
           this.epochsData.forEach((d, i) => {
             const x = 40 + i * stepX;
-            const y = h - 30 - (d.train_loss * (h - 60));
+            const y = h - 25 - (d.train_loss * (h - 50));
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
           });
           ctx.stroke();
 
-          // Draw Acc (Green)
+          // Draw Acc (Emerald)
           ctx.strokeStyle = '#10b981';
-          ctx.lineWidth = 2.5;
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
           this.epochsData.forEach((d, i) => {
             const x = 40 + i * stepX;
-            const y = h - 30 - (d.val_acc * (h - 60));
+            const y = h - 25 - (d.val_acc * (h - 50));
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
           });
           ctx.stroke();
 
-          // Epoch markers
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = '10px monospace';
+          // Epoch markers on X-axis
+          ctx.fillStyle = '#a1a1aa';
+          ctx.font = '10px "Geist Mono", monospace';
           ctx.textAlign = 'center';
           this.epochsData.forEach((d, i) => {
             const x = 40 + i * stepX;
-            ctx.fillText('E' + d.epoch, x, h - 10);
+            ctx.fillText('E' + d.epoch, x, h - 8);
           });
         }
       }

@@ -228,19 +228,35 @@ class ScamPredictor:
         }
 
 
-# Quick test
+# Quick test & CLI execution
 if __name__ == '__main__':
     predictor = ScamPredictor()
-    test_cases = [
-        "ยินดีด้วย! คุณได้รับสิทธิ์ กู้งิuด่วu 50,000 บ. คลิก http://bit.ly/loan999",
-        "SCB: รหัส OTP คือ 193847 ใช้ยืนยันการทำธุรกรรมบัตรเครดิต ยอด 1,250.00 บาท",
-        "ด ่ ว น ร ั บ เ ง ิ น คืนค่าประกันมิเตอร์ไฟฟ้า กฟภ. กด lin.ee/m-pea",
-    ]
-
-    for t in test_cases:
-        res = predictor.predict(t)
-        print("="*60)
+    if len(sys.argv) > 1:
+        sms_text = " ".join(sys.argv[1:])
+        res = predictor.predict(sms_text)
+        print("=" * 60)
         print(f"Input: {res['original_text']}")
         print(f"Status: {res['status_text']} ({res['risk_score']}%)")
+        print(f"Risk Level: {res['risk_level']}")
         print(f"Obfuscation Detected: {res['has_obfuscation']}")
+        if res['has_obfuscation']:
+            print(f"Cleaned Text: {res['cleaned_text']}")
+        if res['suspicious_urls']:
+            print("Suspicious URLs/Channels:")
+            for u in res['suspicious_urls']:
+                print(f"  - {u['url']} -> {', '.join(u['reasons'])}")
         print(f"Safety Hotline: {res['safety_card']['name']} - {res['safety_card']['official_phone']}")
+        print("=" * 60)
+    else:
+        test_cases = [
+            "ยินดีด้วย! คุณได้รับสิทธิ์ กู้งิuด่วu 50,000 บ. คลิก http://bit.ly/loan999",
+            "SCB: รหัส OTP คือ 193847 ใช้ยืนยันการทำธุรกรรมบัตรเครดิต ยอด 1,250.00 บาท",
+            "ด ่ ว น ร ั บ เ ง ิ น คืนค่าประกันมิเตอร์ไฟฟ้า กฟภ. กด lin.ee/m-pea",
+        ]
+        for t in test_cases:
+            res = predictor.predict(t)
+            print("=" * 60)
+            print(f"Input: {res['original_text']}")
+            print(f"Status: {res['status_text']} ({res['risk_score']}%)")
+            print(f"Obfuscation Detected: {res['has_obfuscation']}")
+            print(f"Safety Hotline: {res['safety_card']['name']} - {res['safety_card']['official_phone']}")

@@ -47,9 +47,12 @@ DL_project/
 │   └── urls.py                   # Main URL Routing
 ├── tests/
 │   ├── test_phase1.py            # Unit Tests สำหรับ De-obfuscator และ Dataset
-│   └── test_views.py             # Unit Tests สำหรับ Django Views และ API
+│   ├── test_views.py             # Unit Tests สำหรับ Django Views และ API
+│   └── test_robustness.py        # Unit Tests ความทนทานต่อ Adversarial, OOD และ Generalization
+├── check_sms.py                  # เครื่องมือสแกน SMS ผ่าน Command Line (CLI Scanner)
 ├── manage.py                     # Django Management CLI
 ├── requirements.txt              # Dependencies ของโปรเจกต์
+├── MODEL_FLOW_AND_CODE.md        # คู่มือสถาปัตยกรรม การไหลของข้อมูล และการทำงานของโค้ดแบบละเอียด
 ├── PROJECT_REPORT.md             # เล่มรายงานวิจัยฉบับสมบูรณ์ (ที่มา ทฤษฎี สถาปัตยกรรม และการทดลอง)
 ├── REFERENCES.md                 # เอกสารอ้างอิงแหล่งที่มาของข้อมูลและบทเรียนที่นำมาใช้
 ├── slides_outline.md             # โครงสร้างสไลด์และสคริปต์นำเสนอ 15 นาที
@@ -72,13 +75,23 @@ pip install -r requirements.txt
 python3 data/process_data.py
 ```
 
-### 3. ฝึกสอนโมเดล (Train Model)
+### 3. ฝึกสอนโมเดล (Train Model with Early Stopping & Regularization)
 ```bash
 python3 model/train.py
 ```
-*(ระบบจะสร้างไฟล์ `model/weights.pth` และ `model/metrics.json`)*
+*(ระบบใช้ Label Smoothing, AdamW, Word Dropout และบันทึกน้ำหนักที่ดีที่สุดลง `model/weights.pth`)*
 
-### 4. รัน Django Dashboard
+### 4. รันคำสั่งตรวจสอบ SMS ผ่าน CLI
+```bash
+python3 check_sms.py "กู ้ เงิ น ด่ ว น 50,000 บ. ก ด lin.ee/fastloan"
+```
+
+### 5. รันชุดทดสอบความถูกต้องและ Robustness (14/14 Tests)
+```bash
+python3 manage.py test tests
+```
+
+### 6. รัน Django Dashboard
 ```bash
 python3 manage.py runserver 0.0.0.0:8000
 ```
@@ -86,12 +99,14 @@ python3 manage.py runserver 0.0.0.0:8000
 
 ---
 
-## 📊 ผลลัพธ์และตัวชี้วัดของโมเดล (Model Performance)
+## 📊 ผลลัพธ์และตัวชี้วัดของโมเดล (Model Performance - Hardened Edition)
 
-* **Architecture:** Embedding(64) $\rightarrow$ BiLSTM(Hidden=64, 2 Layers, Dropout=0.3) $\rightarrow$ Self-Attention $\rightarrow$ Dense Classifier
+* **Architecture:** Embedding(64) + Embed Dropout(0.2) $\rightarrow$ BiLSTM(Hidden=64, 2 Layers, Dropout=0.3) $\rightarrow$ Self-Attention(Attn Dropout=0.1) $\rightarrow$ Dense Classifier
 * **Dataset Size:** 10,574 ข้อความ (สากล Kaggle 5,574 [52.71%], ไทยสังเคราะห์จากภัยคุกคามจริง 5,000 [47.29%]) (Train 8,459 / Test 2,115)
-* **Accuracy:** > 98.9%
-* **Macro F1-Score:** > 0.98
+* **Validation Accuracy:** **99.62%** (Test Set Accuracy: **99.57%**)
+* **Validation F1-Score:** **0.9955** (Test Set F1: **0.9950**)
+* **Regularization & Generalization Gap:** Train Loss = 0.1831 (สอดคล้องกับ Theoretical Min ของ Label Smoothing $\alpha=0.08$), Acc Gap = 0.08%
+* **Adversarial Robustness:** ผ่านการทดสอบตรวจจับข้อความพรางคำ (กู้งิu, ด ่ ว น) และ Zero-shot Novel Scams 100%
 * **Average Latency:** ~15–20 ms ต่อข้อความ
 
 ---

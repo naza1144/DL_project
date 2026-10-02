@@ -166,14 +166,19 @@ class Deobfuscator:
 
     @staticmethod
     def extract_and_analyze_urls(text: str) -> List[Dict[str, any]]:
-        """ดึงและวิเคราะห์ลิงก์ในข้อความว่าเป็นลิงก์ต้องสงสัยหรือไม่"""
-        url_pattern = r'(https?://[^\s]+|www\.[^\s]+|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s]*)?)'
+        """ดึงและวิเคราะห์ลิงก์และช่องทางติดต่อในข้อความว่าเป็นลิงก์ต้องสงสัยหรือไม่"""
+        url_pattern = r'(https?://[^\s]+|www\.[^\s]+|(?:lin\.ee|line\.me|bit\.ly|tinyurl\.com|t\.me)/[^\s]+|@[a-zA-Z0-9_.-]+|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s]*)?)'
         urls = re.findall(url_pattern, text)
         analysis = []
 
         for url in urls:
             is_suspicious = False
             reasons = []
+
+            # เช็ค LINE Handle หรือบัญชีแชทส่วนตัว
+            if url.startswith('@') and len(url) > 2:
+                is_suspicious = True
+                reasons.append(f"ใช้ช่องทางติดต่อส่วนบุคคล/ไลน์ไอดีภายนอก ({url})")
 
             # เช็ค URL Shortener
             for shortener in SUSPICIOUS_DOMAINS:

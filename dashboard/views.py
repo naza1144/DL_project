@@ -183,5 +183,8 @@ def inspect_api(request):
         return JsonResponse({'error': 'กรุณากรอกข้อความที่ต้องการทดสอบ'}, status=400)
 
     predictor = get_predictor()
+    t0 = time.time()
     result = predictor.predict(text)
+    latency_ms = round((time.time() - t0) * 1000, 1)
+    result['latency_ms'] = latency_ms
     return JsonResponse(result)
